@@ -75,16 +75,17 @@ class Friend {
   }) : transactions = transactions ?? [];
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'avatar': avatar,
-        'balance': balance,
-        'transactions': transactions.map((t) => t.toJson()).toList(),
-      };
+    'name': name,
+    'avatar': avatar,
+    'balance': balance,
+    'transactions': transactions.map((t) => t.toJson()).toList(),
+  };
 
   factory Friend.fromJson(Map<String, dynamic> json) {
     var transactionsFromJson = json['transactions'] as List;
-    List<Transaction> transactionList =
-        transactionsFromJson.map((t) => Transaction.fromJson(t)).toList();
+    List<Transaction> transactionList = transactionsFromJson
+        .map((t) => Transaction.fromJson(t))
+        .toList();
     return Friend(
       name: json['name'],
       avatar: json['avatar'],
@@ -106,10 +107,10 @@ class Transaction {
   });
 
   Map<String, dynamic> toJson() => {
-        'description': description,
-        'amount': amount,
-        'date': date.toIso8601String(),
-      };
+    'description': description,
+    'amount': amount,
+    'date': date.toIso8601String(),
+  };
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
@@ -292,8 +293,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _saveFriends() async {
     final prefs = await SharedPreferences.getInstance();
-    final String friendsJson =
-        jsonEncode(_friends.map((f) => f.toJson()).toList());
+    final String friendsJson = jsonEncode(
+      _friends.map((f) => f.toJson()).toList(),
+    );
     await prefs.setString('friends', friendsJson);
   }
 
@@ -350,6 +352,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _signOut() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userName');
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+      (Route<dynamic> route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _friends.sort((a, b) => b.balance.compareTo(a.balance));
@@ -357,6 +369,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Friendship Bank'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign Out',
+            onPressed: _signOut,
+          ),
+        ],
       ),
       body: _friends.isEmpty
           ? const Center(
@@ -370,9 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final friend = _friends[index];
                 return Dismissible(
-                  key: Key(friend.name +
-                      friend.transactions.length
-                          .toString()), // Unique key
+                  key: Key(
+                    friend.name + friend.transactions.length.toString(),
+                  ), // Unique key
                   background: Container(
                     color: Colors.green,
                     alignment: Alignment.centerLeft,
@@ -381,8 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(Icons.favorite, color: Colors.white),
                         SizedBox(width: 8),
-                        Text('Hug (+5)',
-                            style: TextStyle(color: Colors.white)),
+                        Text('Hug (+5)', style: TextStyle(color: Colors.white)),
                       ],
                     ),
                   ),
@@ -393,8 +411,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text('Late (-5)',
-                            style: TextStyle(color: Colors.white)),
+                        Text(
+                          'Late (-5)',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         SizedBox(width: 8),
                         Icon(Icons.alarm, color: Colors.white),
                       ],
@@ -403,10 +423,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   onDismissed: (direction) {
                     setState(() {
                       final transaction = Transaction(
-                        description:
-                            direction == DismissDirection.startToEnd
-                                ? '🤗 Hug'
-                                : '⏰ Late',
+                        description: direction == DismissDirection.startToEnd
+                            ? '🤗 Hug'
+                            : '⏰ Late',
                         amount: direction == DismissDirection.startToEnd
                             ? 5
                             : -5,
@@ -419,7 +438,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            '${direction == DismissDirection.startToEnd ? "Added a hug for" : "Marked late for"} ${friend.name}'),
+                          '${direction == DismissDirection.startToEnd ? "Added a hug for" : "Marked late for"} ${friend.name}',
+                        ),
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -507,8 +527,10 @@ class _FriendDetailScreenState extends State<FriendDetailScreen> {
                   itemBuilder: (context, index) {
                     final act = predefinedActs[index];
                     return ListTile(
-                      leading: Icon(act.icon,
-                          color: act.value > 0 ? Colors.green : Colors.red),
+                      leading: Icon(
+                        act.icon,
+                        color: act.value > 0 ? Colors.green : Colors.red,
+                      ),
                       title: Text(act.description),
                       trailing: Text(act.value.toStringAsFixed(0)),
                       onTap: () {
@@ -561,11 +583,10 @@ class _FriendDetailScreenState extends State<FriendDetailScreen> {
               ),
               TextField(
                 controller: amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Points (+/-)',
+                decoration: const InputDecoration(labelText: 'Points (+/-)'),
+                keyboardType: const TextInputType.numberWithOptions(
+                  signed: true,
                 ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(signed: true),
               ),
             ],
           ),
@@ -599,9 +620,7 @@ class _FriendDetailScreenState extends State<FriendDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.friend.name),
-      ),
+      appBar: AppBar(title: Text(widget.friend.name)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -651,7 +670,8 @@ class _FriendDetailScreenState extends State<FriendDetailScreen> {
                           ),
                           title: Text(transaction.description),
                           subtitle: Text(
-                              '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}'),
+                            '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}',
+                          ),
                           trailing: Text(
                             transaction.amount.toStringAsFixed(0),
                             style: TextStyle(

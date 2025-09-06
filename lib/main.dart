@@ -341,9 +341,8 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               child: const Text('Add'),
               onPressed: () {
-                _addFriend(nameController.text);
                 Navigator.of(context).pop(); // Close the dialog
-                // The navigation to FriendDetailScreen is now in _addFriend
+                _addFriend(nameController.text);
               },
             ),
           ],
@@ -362,6 +361,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _clearFriends() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('friends');
+    setState(() {
+      _friends.clear();
+    });
+  }
+
+  void _showClearFriendsConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Clear All Friends?'),
+          content: const Text(
+            'This will delete all friends and their history. This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Clear', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _clearFriends();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _friends.sort((a, b) => b.balance.compareTo(a.balance));
@@ -370,10 +404,24 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Friendship Bank'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign Out',
-            onPressed: _signOut,
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'clear_friends') {
+                _showClearFriendsConfirmationDialog();
+              } else if (value == 'sign_out') {
+                _signOut();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'clear_friends',
+                child: Text('Clear All Friends'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'sign_out',
+                child: Text('Sign Out'),
+              ),
+            ],
           ),
         ],
       ),

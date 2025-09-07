@@ -11,6 +11,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const storedName = localStorage.getItem('userName');
+    console.log('userName from localStorage:', storedName); // Add this line
     if (!storedName) {
       router.push('/');
     } else {

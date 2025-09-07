@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Header from '../../components/Header';
 import styles from '../../styles/MainApp.module.css';
+import { predefinedActs } from '../../lib/data';
 
 export default function FriendPage() {
   const [userName, setUserName] = useState('');
   const [friend, setFriend] = useState(null);
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const [customDescription, setCustomDescription] = useState('');
+  const [customPoints, setCustomPoints] = useState('');
+  const [showCustomForm, setShowCustomForm] = useState(false);
   const router = useRouter();
   const { id } = router.query;
 
@@ -34,20 +36,7 @@ export default function FriendPage() {
     }
   }, [router, id]);
 
-  const handleTransaction = (e, isPositive) => {
-    e.preventDefault();
-    
-    if (!amount.trim() || isNaN(Number(amount))) {
-      alert('Please enter a valid amount');
-      return;
-    }
-
-    const numAmount = Number(amount);
-    if (numAmount <= 0) {
-      alert('Amount must be greater than zero');
-      return;
-    }
-
+  const handlePredefinedAct = (act) => {
     // Get all friends
     const storedFriends = JSON.parse(localStorage.getItem('friends') || '[]');
     const friendIndex = storedFriends.findIndex(f => f.id.toString() === id.toString());
@@ -60,15 +49,15 @@ export default function FriendPage() {
     // Create transaction
     const transaction = {
       id: Date.now(),
-      amount: isPositive ? numAmount : -numAmount,
-      description: description.trim() || (isPositive ? 'Money received' : 'Money given'),
+      amount: act.value,
+      description: `${act.icon} ${act.description}`,
       date: new Date().toISOString(),
     };
 
     // Update friend
     const updatedFriend = {
       ...storedFriends[friendIndex],
-      balance: storedFriends[friendIndex].balance + (isPositive ? numAmount : -numAmount),
+      balance: storedFriends[friendIndex].balance + act.value,
       transactions: [transaction, ...storedFriends[friendIndex].transactions],
     };
 
@@ -78,8 +67,56 @@ export default function FriendPage() {
     
     // Update state
     setFriend(updatedFriend);
-    setAmount('');
-    setDescription('');
+  };
+
+  const handleCustomAct = (e) => {
+    e.preventDefault();
+    
+    if (!customDescription.trim()) {
+      alert('Please enter a description');
+      return;
+    }
+
+    if (!customPoints.trim() || isNaN(Number(customPoints))) {
+      alert('Please enter valid points');
+      return;
+    }
+
+    // Get all friends
+    const storedFriends = JSON.parse(localStorage.getItem('friends') || '[]');
+    const friendIndex = storedFriends.findIndex(f => f.id.toString() === id.toString());
+    
+    if (friendIndex === -1) {
+      alert('Friend not found');
+      return;
+    }
+
+    const pointsValue = Number(customPoints);
+
+    // Create transaction
+    const transaction = {
+      id: Date.now(),
+      amount: pointsValue,
+      description: customDescription.trim(),
+      date: new Date().toISOString(),
+    };
+
+    // Update friend
+    const updatedFriend = {
+      ...storedFriends[friendIndex],
+      balance: storedFriends[friendIndex].balance + pointsValue,
+      transactions: [transaction, ...storedFriends[friendIndex].transactions],
+    };
+
+    // Update friends array
+    storedFriends[friendIndex] = updatedFriend;
+    localStorage.setItem('friends', JSON.stringify(storedFriends));
+    
+    // Update state
+    setFriend(updatedFriend);
+    setCustomDescription('');
+    setCustomPoints('');
+    setShowCustomForm(false);
   };
 
   if (!friend) {
@@ -103,54 +140,83 @@ export default function FriendPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-          <div>
-            <h3>Current Balance</h3>
-            <p className={`${styles.friendBalance} ${friend.balance >= 0 ? styles.positive : styles.negative}`}>
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <h3>Friendship Points</h3>
+            <p className={`${styles.friendBalance} ${friend.balance >= 0 ? styles.positive : styles.negative}`} style={{ fontSize: '2.5rem' }}>
               {friend.balance}
             </p>
           </div>
-          <div>
-            <h3>Add Transaction</h3>
-            <form style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Amount"
-                className={styles.input}
-              />
+          
+          <h3>Add Act of Kindness</h3>
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.5rem' }}>
+              {predefinedActs.map((act) => (
+                <button 
+                  key={act.description}
+                  onClick={() => handlePredefinedAct(act)}
+                  className={styles.button}
+                  style={{ 
+                    backgroundColor: act.value > 0 ? '#28a745' : '#dc3545',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '0.75rem'
+                  }}
+                >
+                  <span style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{act.icon}</span>
+                  <span>{act.description}</span>
+                  <span style={{ fontWeight: 'bold' }}>{act.value > 0 ? `+${act.value}` : act.value}</span>
+                </button>
+              ))}
+              <button 
+                onClick={() => setShowCustomForm(!showCustomForm)}
+                className={styles.button}
+                style={{ 
+                  backgroundColor: '#0070f3',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '0.75rem'
+                }}
+              >
+                <span style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>✨</span>
+                <span>Custom Act</span>
+              </button>
+            </div>
+          </div>
+
+          {showCustomForm && (
+            <form onSubmit={handleCustomAct} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
               <input
                 type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description (optional)"
+                value={customDescription}
+                onChange={(e) => setCustomDescription(e.target.value)}
+                placeholder="Description (add emojis here!)"
                 className={styles.input}
               />
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
-                  onClick={(e) => handleTransaction(e, false)}
-                  className={styles.button}
-                  style={{ backgroundColor: '#dc3545', flex: 1 }}
-                >
-                  I Gave
-                </button>
-                <button 
-                  onClick={(e) => handleTransaction(e, true)}
-                  className={styles.button}
-                  style={{ backgroundColor: '#28a745', flex: 1 }}
-                >
-                  I Received
-                </button>
-              </div>
+              <input
+                type="number"
+                value={customPoints}
+                onChange={(e) => setCustomPoints(e.target.value)}
+                placeholder="Points (+/-)"
+                className={styles.input}
+              />
+              <button 
+                type="submit"
+                className={styles.button}
+                style={{ backgroundColor: '#0070f3' }}
+              >
+                Add Custom Act
+              </button>
             </form>
-          </div>
+          )}
         </div>
 
         <div>
-          <h3>Transaction History</h3>
+          <h3>Activity History</h3>
           {friend.transactions.length === 0 ? (
-            <p className={styles.noFriends}>No transactions yet.</p>
+            <p className={styles.noFriends}>No activities yet.</p>
           ) : (
             <ul className={styles.friendList}>
               {friend.transactions.map((transaction) => (
@@ -162,7 +228,7 @@ export default function FriendPage() {
                     </div>
                   </div>
                   <span className={`${styles.friendBalance} ${transaction.amount >= 0 ? styles.positive : styles.negative}`}>
-                    {transaction.amount}
+                    {transaction.amount > 0 ? `+${transaction.amount}` : transaction.amount}
                   </span>
                 </li>
               ))}

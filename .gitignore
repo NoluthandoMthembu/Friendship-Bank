@@ -1,47 +1,79 @@
-# Miscellaneous
-*.class
+# =========================
+# GENERAL
+# =========================
 *.log
-*.pyc
+*.tmp
 *.swp
+*.DS_Store
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+Thumbs.db
 
-# IntelliJ related
+# =========================
+# IDE / EDITORS
+# =========================
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
+.vscode/   # remove this line if you WANT to share VS Code settings
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# =========================
+# FLUTTER / DART
+# =========================
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
-/build/
-/coverage/
+build/
+coverage/
 
-# Symbolication related
-app.*.symbols
+# Flutter platform-specific
+**/ios/Flutter/.last_build_id
 
-# Obfuscation related
-app.*.map.json
+# =========================
+# ANDROID
+# =========================
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-.vercel
-node_modules
+# =========================
+# iOS / macOS
+# =========================
+ios/Pods/
+ios/.symlinks/
+macos/Pods/
+
+# =========================
+# NODE / NEXT.JS (OLD FILES)
+# =========================
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# =========================
+# DEPLOYMENT / HOSTING
+# =========================
+.vercel/
+
+# =========================
+# MISC BUILD FILES
+# =========================
+.build/
+buildlog/
+.history
+.svn/
+
+# =========================
+# SECURITY / ENV FILES
+# =========================
+.env
+.env.local
+.env.*.local
